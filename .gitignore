@@ -1,0 +1,6 @@
+.mod
+__pycache__/
+*.log
+*.tmp
+.vscode
+data
