@@ -8,7 +8,7 @@ import (
 type LPBInputs struct {
 	TxPowerDbm float64
 	RxSensitivityDbm float64
-	FiberLossDb float64
+	FiberAttDbPerKm float64
 	ConnLossDb float64
 	SpliceLossDb float64
 	SplitterLossDb float64
@@ -27,13 +27,13 @@ type LPBResults struct {
 // Define function to calculate link power budget
 func CalculateLPB(input LPBInputs) (LPBResults, error) {
 	// Check if inputs are valid
-	if input.FiberLossDb < 0 {
+	if input.FiberAttDbPerKm < 0 {
 		return LPBResults{}, errors.New("Fiber loss does not have valid value")
 	}
 
 	// LPB Calculation logic
-	fiberAttenuation := input.FiberLossDb * input.LinkLengthKm
-	totalLoss := fiberAttenuation + input.ConnLossDb + input.SpliceLossDb + input.SpliceLossDb
+	fiberAttenuation := input.FiberAttDbPerKm * input.LinkLengthKm
+	totalLoss := fiberAttenuation + input.ConnLossDb + input.SpliceLossDb + input.SplitterLossDb
 
 	// Received power and margin calculation: Pr = Pt - Ps or Total Loss
 	rxPower := input.TxPowerDbm - totalLoss

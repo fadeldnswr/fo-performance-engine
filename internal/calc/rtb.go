@@ -47,5 +47,5 @@ func CalculateRTB(input RTBInputs) (RTBResults, error){
 		TotalRiseTimeNs: systemRt,
 		AllowedRiseTimeNs: allowedRt,
 		Status: status,
-	}, errors.New("An error has occured in Rise Time Budget calculations")
+	}, nil
 }
