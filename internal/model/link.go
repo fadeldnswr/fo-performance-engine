@@ -43,7 +43,7 @@ type LinkOutput struct {
 	// Rise time budget
 	SystemRiseTimeNs float64
 	AllowedRiseTimeNs float64
-	RTBStatus string
+	RTBStatus bool
 
 	// Explainability
 	TopContributor1 string
