@@ -18,12 +18,14 @@ func ApplyVariations(link model.LinkInput, v Variation, value float64) (model.Li
 	// Define output link as a copy of input
 	out := link
 	switch v.Field {
-	case "system_margin_db":
+	case "engineering_margin_db", "system_margin_db":
 		out.SystemMarginDb = value
 	case "fiber_length_km":
 		out.FiberLengthKm = value
 	case "fiber_att_db_per_km":
 		out.FiberAttDbPerKm = value
+	case "splitter_loss_db":
+		out.SplitterLossDb = value
 	default:
 		return link, errors.New("Unknown variation field: " + v.Field)
 	}
@@ -50,9 +52,13 @@ func RunSweep(base []model.LinkInput, vars []Variation, opt SweepOptions) ([]mod
 				var err error
 				for i, v := range vars {
 					mod, err = ApplyVariations(mod, v, current[i])
-					if err != nil { continue }
+					if err != nil { 
+						panic(err)
+					}
 				}
-				results = append(results, calc.Compute(mod, opt.Runner))
+				finalRes, err := calc.Compute(mod, opt.Runner)
+				if err != nil { continue }
+				results = append(results, finalRes)
 			}
 			return
 		}
@@ -62,5 +68,5 @@ func RunSweep(base []model.LinkInput, vars []Variation, opt SweepOptions) ([]mod
 		}
 	}
 	rec(0, []float64{})
-	return  results
+	return results
 }
