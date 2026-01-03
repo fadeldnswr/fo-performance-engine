@@ -1,0 +1,2 @@
+link_id,scenario,fiber_loss_db,splice_total_db,connector_total_db,total_loss_db,rx_power_dbm,margin_db,lpb_status,system_rise_time_ns,allowed_rise_time_ns,rtb_pass,top_contributor_1,top_contributor_2,top_contributor_3
+L1,base,6.000000,0.400000,1.000000,23.400000,-19.400000,5.600000,PASS,0.000000,0.000000,false,splitter_loss_db,fiber_loss_db,connector_total_db
