@@ -14,6 +14,7 @@ type LPBInputs struct {
 	SplitterLossDb float64
 	SystemMarginDb float64
 	LinkLengthKm float64
+	OtherLossDb float64
 }
 
 // Define struct for LPB outputs
@@ -33,7 +34,7 @@ func CalculateLPB(input LPBInputs) (LPBResults, error) {
 
 	// LPB Calculation logic
 	fiberAttenuation := input.FiberAttDbPerKm * input.LinkLengthKm
-	totalLoss := fiberAttenuation + input.ConnLossDb + input.SpliceLossDb + input.SplitterLossDb
+	totalLoss := fiberAttenuation + input.ConnLossDb + input.SpliceLossDb + input.SplitterLossDb + input.OtherLossDb
 
 	// Received power and margin calculation: Pr = Pt - Ps or Total Loss
 	rxPower := input.TxPowerDbm - totalLoss

@@ -1,6 +1,7 @@
 package calc
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/fadeldnswr/fo-performance-engine.git/internal/model"
@@ -16,20 +17,27 @@ type RunnerOptions struct {
 	DispersionPerKm  float64
 }
 // Define function to run calculations on link inputs
-func Compute(link model.LinkInput, opt RunnerOptions) (model.LinkOutput) {
+func Compute(link model.LinkInput, opt RunnerOptions) (model.LinkOutput, error) {
+	// Loss precompute and breakdown
+	fiberLossDb := link.FiberLengthKm * link.FiberAttDbPerKm
+	connTotalDb := float64(link.NConnectors) * link.ConnectorLossDb
+	spliceTotalDb := float64(link.NSplice) * link.SpliceLossDb
+
 	// Call LPB calculation
 	lpbInput := LPBInputs{
 		TxPowerDbm: link.TXPowerDbm,
 		RxSensitivityDbm: link.RXSensitivityDbm,
 		FiberAttDbPerKm: link.FiberAttDbPerKm,
-		ConnLossDb: float64(link.NConnectors) * link.ConnectorLossDb,
-		SpliceLossDb: float64(link.NSplice) * link.SpliceLossDb,
+		ConnLossDb: connTotalDb,
+		SpliceLossDb: spliceTotalDb,
 		SystemMarginDb: link.SystemMarginDb,
 		LinkLengthKm: link.FiberLengthKm,
+		OtherLossDb: link.OtherLossDb,
+		SplitterLossDb: link.SplitterLossDb,
 	}
 	lpbOutput, err := CalculateLPB(lpbInput)
 	if err != nil {
-		return model.LinkOutput{}
+		return model.LinkOutput{}, fmt.Errorf("An error has occurred: %v", err.Error())
 	}
 
 	// Prepare result structure
@@ -40,20 +48,10 @@ func Compute(link model.LinkInput, opt RunnerOptions) (model.LinkOutput) {
 		RxPowerDbm:  lpbOutput.RxPowerDbm,
 		MarginDb:    lpbOutput.MarginDb,
 		LPBStatus:   lpbOutput.Status,
+		FiberLossDb: fiberLossDb,
+		ConnectorTotalDb: connTotalDb,
+		SpliceTotalDb: spliceTotalDb,
 	}
-
-	// Loss breakdown
-	fiberLossDb := link.FiberLengthKm * link.FiberAttDbPerKm
-	connTotalDb := float64(link.NConnectors) * link.ConnectorLossDb
-	spliceTotalDb := float64(link.NSplice) * link.SpliceLossDb
-
-	// Assign breakdown to result
-	res.FiberLossDb = fiberLossDb
-	res.ConnectorTotalDb = connTotalDb
-	res.SpliceTotalDb = spliceTotalDb
-
-	// Total loss breakdown match with link power budget total loss
-	res.TotalLossDb = fiberLossDb + connTotalDb + spliceTotalDb + link.SplitterLossDb + link.SpliceLossDb
 
 	// Explainability placeholders
 	type contribute struct {
@@ -68,7 +66,10 @@ func Compute(link model.LinkInput, opt RunnerOptions) (model.LinkOutput) {
 		{"splice_loss_db", link.SpliceLossDb},
 	}
 	// Sort contributors by value descending
-	sort.Slice(contributors, func(i, j int) bool{ return contributors[i].value > contributors[j].value })
+	sort.Slice(contributors, 
+		func(i, j int) bool { 
+			return contributors[i].value > contributors[j].value 
+		})
 	res.TopContributor1 = contributors[0].name
 	res.TopContributor2 = contributors[1].name
 	res.TopContributor3 = contributors[2].name
@@ -84,12 +85,12 @@ func Compute(link model.LinkInput, opt RunnerOptions) (model.LinkOutput) {
 		}
 		rtbOut, err := CalculateRTB(rtbIn)
 		if err != nil {
-			return model.LinkOutput{}
+			return model.LinkOutput{}, fmt.Errorf("An error has occurred: %v", err.Error())
 		}
 		// Define result fields
 		res.SystemRiseTimeNs = rtbOut.TotalRiseTimeNs
 		res.AllowedRiseTimeNs = rtbOut.AllowedRiseTimeNs
 		res.RTBStatus = (rtbOut.Status == "PASS")
 	}
-	return res
+	return res, nil
 }
