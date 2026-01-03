@@ -21,6 +21,7 @@ type LinkInput struct {
 	NConnectors int
 	ConnectorLossDb float64
 	SplitterLossDb float64
+	OtherLossDb float64
 }
 
 // Define link output contract data
